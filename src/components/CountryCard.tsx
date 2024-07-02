@@ -12,9 +12,10 @@ interface CountryDetails {
 
 interface CountryCardProps {
   details: CountryDetails;
+  onViewMore: () => void;
 }
 
-const CountryCard: React.FC<CountryCardProps> = ({ details }) => {
+const CountryCard: React.FC<CountryCardProps> = ({ details, onViewMore }) => {
   const { flag, name, population, region, capital } = details;
 
   return (
@@ -22,14 +23,12 @@ const CountryCard: React.FC<CountryCardProps> = ({ details }) => {
       <div className="text-center text-2xl">{flag}</div>
       <p className="text-center mb-2 font-semibold">{name.common}</p>
       {capital?.map((item, index) => (
-        <p className="text-xs" key={index}>
-          Capital: {item}
-        </p>
+        <p className="text-xs" key={index}>Capital: {item}</p>
       ))}
       <p className="text-xs">Population: {population}</p>
       <p className="text-xs">Region: {region}</p>
       <div className="flex justify-center mt-2">
-        <button className="rounded-md p-2 bg-blue-400 text-white text-sm">
+        <button className="rounded-md p-2 bg-blue-400 text-white text-sm" onClick={onViewMore}>
           View More
         </button>
       </div>

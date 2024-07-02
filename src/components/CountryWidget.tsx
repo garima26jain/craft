@@ -1,17 +1,47 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { useQuery } from "@apollo/client";
-import { FETCH_COUNTRIES_QUERY } from "../graphql/queries/country.query.ts";
+import { useQuery, useLazyQuery } from "@apollo/client";
+import { FETCH_COUNTRIES_QUERY, FETCH_COUNTRY_BY_NAME_QUERY } from "../graphql/queries/country.query";
 import CountryCard from "./CountryCard";
+import CountryModal from "./CountryModal";
 import Search from "../assets/search-mobile.svg";
+
+interface NativeName {
+  language: string;
+  official: string;
+  common: string;
+}
+
+interface Currency {
+  code: string;
+  name: string;
+  symbol: string;
+}
+
+interface Flag {
+  png: string;
+  svg: string;
+  alt: string;
+}
+
+interface Language {
+  key: string;
+  value: string;
+}
 
 interface Country {
   name: {
     common: string;
+    official: string;
+    nativeName: NativeName[];
   };
   flag: string;
   population: number;
   region: string;
   capital?: string[];
+  currencies: Currency[];
+  borders?: string[];
+  flags: Flag;
+  languages: Language[];
 }
 
 const CountryListWidget: React.FC = () => {
@@ -21,6 +51,11 @@ const CountryListWidget: React.FC = () => {
   const [loadCount, setLoadCount] = useState<number>(20); // Initial number of countries to display
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+
+  const [fetchCountryByName, { data: countryData, loading: countryLoading, error: countryError }] = useLazyQuery(FETCH_COUNTRY_BY_NAME_QUERY);
+console.log({countryData});
 
   useEffect(() => {
     if (data && data.countries) {
@@ -28,6 +63,14 @@ const CountryListWidget: React.FC = () => {
       setDisplayedCountries(data.countries.slice(0, loadCount));
     }
   }, [data, loadCount]);
+
+  useEffect(() => {
+    if (countryData && countryData.countryByName) {
+      setSelectedCountry(countryData.countryByName);
+      setIsModalOpen(true);
+      document.body.classList.add("no-scroll");
+    }
+  }, [countryData]);
 
   const handleObserver = useCallback(
     (entries: IntersectionObserverEntry[]) => {
@@ -61,6 +104,16 @@ const CountryListWidget: React.FC = () => {
     };
   }, [handleObserver]);
 
+  const handleViewMore = (country: Country) => {
+    fetchCountryByName({ variables: { name: country.name.common } });
+  };
+
+  const handleCloseModal = () => {
+    setSelectedCountry(null);
+    setIsModalOpen(false);
+    document.body.classList.remove("no-scroll");
+  };
+
   if (loading && displayedCountries.length === 0) {
     return <div>Loading...</div>;
   }
@@ -83,12 +136,13 @@ const CountryListWidget: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 m-2">
         {displayedCountries.map((country, index) => (
           <div key={index} className="flex">
-            <CountryCard details={country} />
+            <CountryCard details={country} onViewMore={() => handleViewMore(country)} />
           </div>
         ))}
       </div>
       {loading && <div>Loading...</div>}
       <div ref={loadMoreRef} style={{ height: "1px" }}></div>
+      {isModalOpen && <CountryModal country={selectedCountry} onClose={handleCloseModal} />}
     </div>
   );
 };

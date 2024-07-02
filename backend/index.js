@@ -1,5 +1,5 @@
-import typeDefs from "./typeDefs/country.typeDef";
-import resolvers from './resolvers/country.resolver'
+import typeDefs from "./typeDefs/country.typeDef.js";
+import resolvers from './resolvers/country.resolver.js'
 import express from "express";
 import { ApolloServer } from "apollo-server-express";
 

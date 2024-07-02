@@ -1,22 +1,22 @@
 import { ApolloClient, InMemoryCache, ApolloProvider } from "@apollo/client";
-import React from "react";
 import App from "./App";
+import "./index.css";
+import { createRoot } from "react-dom/client";
 
 const client = new ApolloClient({
-  uri:"/graphql",
+  uri: "http://localhost:4000/graphql",
   cache: new InMemoryCache(),
 });
 
-interface ApolloProviderProps {
-  children: React.ReactNode;
-}
+const container = document.getElementById("root");
 
-const ApolloProviderWrapper: React.FC<ApolloProviderProps> = ( ) => {
-  return (
+if (container) {
+  const root = createRoot(container);
+  root.render(
     <ApolloProvider client={client}>
       <App />
     </ApolloProvider>
   );
-};
-
-export default ApolloProviderWrapper;
+} else {
+  console.error("Root container not found");
+}
