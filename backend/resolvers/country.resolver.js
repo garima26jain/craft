@@ -42,8 +42,6 @@ const resolvers = {
           })
         );
 
-        console.log({currencies})
-
         // Transform languages
         const languages = Object.entries(country.languages).map(
           ([key, value]) => ({
