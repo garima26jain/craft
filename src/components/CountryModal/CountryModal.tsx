@@ -1,38 +1,5 @@
 import React from "react";
-
-interface CountryModalProps {
-  country: {
-    name: {
-      common: string;
-      official: string;
-      nativeName: {
-        language: string;
-        official: string;
-        common: string;
-      }[];
-    };
-    flag: string;
-    population: number;
-    region: string;
-    capital?: string[];
-    currencies: {
-      code: string;
-      name: string;
-      symbol: string;
-    }[];
-    borders?: string[];
-    flags: {
-      png: string;
-      svg: string;
-      alt: string;
-    };
-    languages: {
-      key: string;
-      value: string;
-    }[];
-  } | null;
-  onClose: () => void;
-}
+import { CountryModalProps } from "../ICountryModal";
 
 const CountryModal: React.FC<CountryModalProps> = ({ country, onClose }) => {
   if (!country) return null;
@@ -54,7 +21,7 @@ const CountryModal: React.FC<CountryModalProps> = ({ country, onClose }) => {
         <button className="absolute right-4" onClick={onClose}>
           &times;
         </button>
-        
+
         <div className="text-center mt-4">
           <img
             src={flags?.svg}
@@ -96,7 +63,7 @@ const CountryModal: React.FC<CountryModalProps> = ({ country, onClose }) => {
               </li>
             ))}
           </ul>
-        )} 
+        )}
       </div>
     </div>
   );
