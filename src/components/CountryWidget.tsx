@@ -15,11 +15,15 @@ const CountryListWidget: React.FC = () => {
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [searchTerm, setSearchTerm] = useState<string>(
+    localStorage.getItem("searchTerm") || ""
+  );
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
   const [searchBy, setSearchBy] = useState<{ value: string; label: string }>(
-    searchOptions[0]
+    JSON.parse(
+      localStorage.getItem("searchBy") || JSON.stringify(searchOptions[0])
+    )
   );
 
   const [fetchCountryByName, { data: countryData }] = useLazyQuery(
@@ -115,6 +119,14 @@ const CountryListWidget: React.FC = () => {
   );
 
   useEffect(() => {
+    localStorage.setItem("searchTerm", searchTerm);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    localStorage.setItem("searchBy", JSON.stringify(searchBy));
+  }, [searchBy]);
+
+  useEffect(() => {
     if (observerRef.current) {
       observerRef.current.disconnect();
     }
@@ -180,21 +192,36 @@ const CountryListWidget: React.FC = () => {
   // }, []);
 
   return (
-    <div className="m-4">
+    <div
+      className="h-full
+     bg-custom-gradient"
+    >
       <Header
         handleSearchChange={handleSearchChange}
         searchTerm={searchTerm}
         searchBy={searchBy}
         setSearchBy={setSearchBy}
         handleKeyDown={handleKeyDown}
+        setSearchTerm={setSearchTerm}
       />
       {!countries ||
       !displayedCountries ||
       countries?.length === 0 ||
       displayedCountries?.length === 0 ? (
-        <div role="alert">No Results Found</div>
+        <div
+          className="h-screen overflow-y-auto flex items-center justify-center text-lg"
+          role="alert"
+        >
+          No Results Found
+        </div>
       ) : (
         <>
+          {displayedCountries.length > 0 && searchTerm.length > 0 && (
+            <div className="text-center my-4">
+              Showing {displayedCountries.length} out of {countries.length}{" "}
+              results
+            </div>
+          )}
           <div
             role="list"
             className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 m-2"

@@ -13,6 +13,7 @@ interface HeaderProps {
   searchBy: SearchOption;
   setSearchBy: (option: SearchOption) => void;
   handleKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => void;
+  setSearchTerm: (term: string) => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -21,6 +22,7 @@ const Header: React.FC<HeaderProps> = ({
   searchBy,
   setSearchBy,
   handleKeyDown,
+  setSearchTerm,
 }) => {
   const handleSearchByChange = useCallback(
     (selectedOption: SearchOption | null) => {
@@ -32,9 +34,9 @@ const Header: React.FC<HeaderProps> = ({
   );
 
   return (
-    <div className="flex justify-between flex-wrap">
-      <h1 className="font-bold p-2">Countries</h1>
-      <div className="w-full sm:w-96 h-10 border-black border border-solid rounded-md mb-2 flex items-center relative">
+    <div className="flex justify-between flex-wrap mx-4">
+      <div className="font-bold p-2 text-lg">Countries</div>
+      <div className="w-[500px] h-10 border-black border border-solid rounded-md my-2 flex items-center relative bg-white">
         <label htmlFor="searchBy" className="sr-only">
           Search By
         </label>
@@ -77,6 +79,16 @@ const Header: React.FC<HeaderProps> = ({
           onKeyDown={handleKeyDown}
           aria-label={`Search for a country by ${searchBy.label.toLowerCase()}`}
         />
+        {searchTerm && (
+          <button
+            type="button"
+            className="absolute right-0 px-2 text-gray-500"
+            onClick={() => setSearchTerm("")}
+            aria-label="Clear search"
+          >
+            &#x2715;
+          </button>
+        )}
         {/* {searchTerm && displayedCountries.length > 0 && (
         <div className="absolute top-12 left-0 right-0 bg-white border border-solid border-gray-300 max-h-40 overflow-y-auto z-10">
           {displayedCountries.map((country, index) => (

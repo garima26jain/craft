@@ -5,7 +5,7 @@ interface searchType{
 
 
 export const searchOptions:searchType[] = [
-    { value: "name", label: "Name" },
+    { value: "name", label: "Country Name" },
     { value: "region", label: "Region" },
     { value: "lang", label: "Language" },
     { value: "currency", label: "Currency" },
