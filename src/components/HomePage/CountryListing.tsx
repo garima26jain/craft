@@ -25,6 +25,8 @@ const CountryListing: React.FC = () => {
       localStorage.getItem("searchBy") || JSON.stringify(searchOptions[0])
     )
   );
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [searchResults, setSearchResults] = useState<Country[]>([]);
 
   const [fetchCountryByName, { data: countryData }] = useLazyQuery(
     FETCH_COUNTRY_BY_NAME_QUERY
@@ -32,12 +34,19 @@ const CountryListing: React.FC = () => {
 
   useEffect(() => {
     const getCountries = async () => {
-      const res = await axios.get(
-        "https://restcountries.com/v3.1/all?fields=name,capital,population,region,flag"
-      );
-      const data = await res.data;
-      setCountries(data);
-      setDisplayedCountries(data.slice(0, loadCount));
+      setIsLoading(true);
+      try {
+        const res = await axios.get(
+          "https://restcountries.com/v3.1/all?fields=name,capital,population,region,flag"
+        );
+        const data = res.data;
+        setCountries(data);
+        setDisplayedCountries(data.slice(0, loadCount));
+      } catch (error) {
+        console.error("Error fetching countries:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
     getCountries();
   }, []);
@@ -61,6 +70,7 @@ const CountryListing: React.FC = () => {
   }, [searchTerm]);
 
   const searchCountries = async (searchTerm: string, searchBy: string) => {
+    setIsLoading(true);
     let apiUrl = `https://restcountries.com/v3.1/name/${searchTerm}?fields=name,capital,population,region,flag`;
     if (searchBy === "region") {
       apiUrl = `https://restcountries.com/v3.1/region/${searchTerm}?fields=name,capital,population,region,flag`;
@@ -72,14 +82,16 @@ const CountryListing: React.FC = () => {
     try {
       const currentText = searchTerm;
       const res = await axios.get(apiUrl);
-      if (res.status != 200) {
+      if (res.status !== 200) {
         throw new Error();
       }
-      const data = await res.data;
+      const data = res.data;
       return { data, currentText };
-    } catch (e) {
+    } catch (error) {
       setDisplayedCountries([]);
-      throw e;
+      console.error("Error searching countries:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -87,18 +99,22 @@ const CountryListing: React.FC = () => {
     const fetchFilteredCountries = async () => {
       if (debouncedSearchTerm) {
         try {
-          const { data, currentText } = await searchCountries(
+          const result = await searchCountries(
             debouncedSearchTerm,
             searchBy.value
           );
-          if (currentText === debouncedSearchTerm) {
-            setDisplayedCountries(data?.slice(0, loadCount));
+          if (result) {
+            const { data, currentText } = result;
+            if (currentText === debouncedSearchTerm) {
+              setSearchResults(data);
+              setDisplayedCountries(data.slice(0, loadCount));
+            }
           }
-        } catch (e) {
-          // console.log(e);
+        } catch (error) {
+          console.error("Error filtering countries:", error);
         }
       } else {
-        setDisplayedCountries(countries?.slice(0, loadCount));
+        setDisplayedCountries(countries.slice(0, loadCount));
       }
     };
     fetchFilteredCountries();
@@ -109,13 +125,19 @@ const CountryListing: React.FC = () => {
       const target = entries[0];
       if (target.isIntersecting) {
         setLoadCount((prevCount) => prevCount + 20);
-        setDisplayedCountries((prevCountries) => [
-          ...(Array.isArray(prevCountries) ? prevCountries : []),
-          ...countries.slice(prevCountries?.length, prevCountries?.length + 20),
-        ]);
+        setDisplayedCountries((prevCountries) => {
+          const allCountries = debouncedSearchTerm ? searchResults : countries;
+          return [
+            ...(Array.isArray(prevCountries) ? prevCountries : []),
+            ...allCountries.slice(
+              prevCountries.length,
+              prevCountries.length + 20
+            ),
+          ];
+        });
       }
     },
-    [countries]
+    [countries, searchResults, debouncedSearchTerm]
   );
 
   useEffect(() => {
@@ -166,9 +188,8 @@ const CountryListing: React.FC = () => {
 
   return (
     <div
-      className="h-screen w-screen
-     bg-custom-gradient"
-     data-testid="country-listing"
+      className="h-screen w-screen bg-custom-gradient"
+      data-testid="country-listing"
     >
       <Header
         handleSearchChange={handleSearchChange}
@@ -177,10 +198,11 @@ const CountryListing: React.FC = () => {
         setSearchBy={setSearchBy}
         setSearchTerm={setSearchTerm}
       />
-      {!countries ||
-      !displayedCountries ||
-      countries?.length === 0 ||
-      displayedCountries?.length === 0 ? (
+      {isLoading ? (
+        <div className="flex justify-center items-center h-screen">
+          Loading...
+        </div>
+      ) : !countries.length || !displayedCountries.length ? (
         <div
           className="h-screen overflow-y-auto flex items-center justify-center text-lg"
           role="alert"
@@ -192,7 +214,8 @@ const CountryListing: React.FC = () => {
         <>
           {displayedCountries.length > 0 && searchTerm.length > 0 && (
             <div className="text-center my-4" data-testid="results-count">
-              Showing {displayedCountries.length} out of {countries.length}{" "}
+              Showing {displayedCountries.length} out of{" "}
+              {debouncedSearchTerm ? searchResults.length : countries.length}{" "}
               results
             </div>
           )}
@@ -201,8 +224,13 @@ const CountryListing: React.FC = () => {
             data-testid="countries-list"
             className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 m-2"
           >
-            {displayedCountries?.map((country, index) => (
-              <div key={index} className="flex" role="listitem" data-testid={`country-item-${index}`}>
+            {displayedCountries.map((country, index) => (
+              <div
+                key={index}
+                className="flex"
+                role="listitem"
+                data-testid={`country-item-${index}`}
+              >
                 <CountryCard
                   details={country}
                   onViewMore={() => handleViewMore(country)}
