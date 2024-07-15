@@ -1,7 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import CountryCard, {CountryCardProps} from './CountryCard';
-import React from 'react';
 
 const mockOnViewMore = jest.fn();
 

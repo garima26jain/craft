@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import Header, { HeaderProps, CustomSelect } from './Header';
-import React from 'react';
+
 
 // Mock search options
 const mockSearchOption = { value: 'name', label: 'Name' };
