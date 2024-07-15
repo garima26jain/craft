@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useLazyQuery } from "@apollo/client";
-import { FETCH_COUNTRY_BY_NAME_QUERY } from "../graphql/queries/country.query";
-import CountryCard from "./CountryCards/CountryCard";
-import CountryModal from "./CountryModal/CountryModal";
-import { Country } from "./ICountryWidget";
-import Header from "./Header/Header";
-import { searchOptions } from "../utils/constants";
+import { FETCH_COUNTRY_BY_NAME_QUERY } from "../../graphql/queries/country.query";
+import CountryCard from "../CountryCards/CountryCard";
+import CountryModal from "../CountryModal/CountryModal";
+import { Country } from "../ICountryWidget";
+import Header from "../Header/Header";
+import { searchOptions } from "../../utils/constants";
+import axios from "axios";
 
-const CountryListWidget: React.FC = () => {
+const CountryListing: React.FC = () => {
   const [countries, setCountries] = useState<Country[]>([]);
   const [displayedCountries, setDisplayedCountries] = useState<Country[]>([]);
   const [loadCount, setLoadCount] = useState<number>(20);
@@ -19,7 +20,6 @@ const CountryListWidget: React.FC = () => {
     localStorage.getItem("searchTerm") || ""
   );
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
-  const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
   const [searchBy, setSearchBy] = useState<{ value: string; label: string }>(
     JSON.parse(
       localStorage.getItem("searchBy") || JSON.stringify(searchOptions[0])
@@ -32,10 +32,10 @@ const CountryListWidget: React.FC = () => {
 
   useEffect(() => {
     const getCountries = async () => {
-      const res = await fetch(
+      const res = await axios.get(
         "https://restcountries.com/v3.1/all?fields=name,capital,population,region,flag"
       );
-      const data = await res.json();
+      const data = await res.data;
       setCountries(data);
       setDisplayedCountries(data.slice(0, loadCount));
     };
@@ -71,11 +71,11 @@ const CountryListWidget: React.FC = () => {
     }
     try {
       const currentText = searchTerm;
-      const res = await fetch(apiUrl);
+      const res = await axios.get(apiUrl);
       if (res.status != 200) {
         throw new Error();
       }
-      const data = await res.json();
+      const data = await res.data;
       return { data, currentText };
     } catch (e) {
       setDisplayedCountries([]);
@@ -95,7 +95,7 @@ const CountryListWidget: React.FC = () => {
             setDisplayedCountries(data?.slice(0, loadCount));
           }
         } catch (e) {
-          console.log(e);
+          // console.log(e);
         }
       } else {
         setDisplayedCountries(countries?.slice(0, loadCount));
@@ -160,48 +160,21 @@ const CountryListWidget: React.FC = () => {
   const handleSearchChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       setSearchTerm(event.target.value);
-      setHighlightedIndex(-1);
     },
     []
   );
 
-  const handleKeyDown = useCallback(
-    (event: React.KeyboardEvent<HTMLInputElement>) => {
-      if (event.key === "ArrowDown") {
-        setHighlightedIndex((prevIndex) =>
-          prevIndex < displayedCountries?.length - 1 ? prevIndex + 1 : 0
-        );
-      } else if (event.key === "ArrowUp") {
-        setHighlightedIndex((prevIndex) =>
-          prevIndex > 0 ? prevIndex - 1 : displayedCountries?.length - 1
-        );
-      } else if (event.key === "Enter" && highlightedIndex >= 0) {
-        const selectedCountry = displayedCountries[highlightedIndex];
-        setSearchTerm(selectedCountry.name.common);
-        setHighlightedIndex(-1);
-        setDisplayedCountries([selectedCountry]);
-      }
-    },
-    [displayedCountries, highlightedIndex]
-  );
-
-  // const handleOptionClick = useCallback((country: Country) => {
-  //   setSearchTerm(country.name.common);
-  //   setHighlightedIndex(-1);
-  //   setDisplayedCountries([country]);
-  // }, []);
-
   return (
     <div
-      className="h-full
+      className="h-screen w-screen
      bg-custom-gradient"
+     data-testid="country-listing"
     >
       <Header
         handleSearchChange={handleSearchChange}
         searchTerm={searchTerm}
         searchBy={searchBy}
         setSearchBy={setSearchBy}
-        handleKeyDown={handleKeyDown}
         setSearchTerm={setSearchTerm}
       />
       {!countries ||
@@ -211,23 +184,25 @@ const CountryListWidget: React.FC = () => {
         <div
           className="h-screen overflow-y-auto flex items-center justify-center text-lg"
           role="alert"
+          data-testid="no-results"
         >
           No Results Found
         </div>
       ) : (
         <>
           {displayedCountries.length > 0 && searchTerm.length > 0 && (
-            <div className="text-center my-4">
+            <div className="text-center my-4" data-testid="results-count">
               Showing {displayedCountries.length} out of {countries.length}{" "}
               results
             </div>
           )}
           <div
             role="list"
+            data-testid="countries-list"
             className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 m-2"
           >
             {displayedCountries?.map((country, index) => (
-              <div key={index} className="flex" role="listitem">
+              <div key={index} className="flex" role="listitem" data-testid={`country-item-${index}`}>
                 <CountryCard
                   details={country}
                   onViewMore={() => handleViewMore(country)}
@@ -239,11 +214,13 @@ const CountryListWidget: React.FC = () => {
             ref={loadMoreRef}
             style={{ height: "1px" }}
             aria-hidden="true"
+            data-testid="load-more"
           ></div>
           {isModalOpen && (
             <CountryModal
               country={selectedCountry}
               onClose={handleCloseModal}
+              data-testid="country-modal"
             />
           )}
         </>
@@ -252,4 +229,4 @@ const CountryListWidget: React.FC = () => {
   );
 };
 
-export default CountryListWidget;
+export default CountryListing;

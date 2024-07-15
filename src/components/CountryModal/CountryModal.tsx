@@ -16,7 +16,7 @@ const CountryModal: React.FC<CountryModalProps> = ({ country, onClose }) => {
   } = country;
 
   return (
-    <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex justify-center items-center z-50">
+    <div role="dialog" data-testid="country-modal" className="fixed inset-0 bg-gray-500 bg-opacity-75 flex justify-center items-center z-50">
       <div className="relative bg-slate-200 p-10 rounded-lg shadow-lg m-2">
         <button className="absolute top-2 right-2" onClick={onClose}>
           &times;

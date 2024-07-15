@@ -2,12 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
-.no-scroll {
-  overflow: hidden;
+body{
+  background-image: linear-gradient(to right, #fdcbf1, #e6dee9);
 }
 
-.grid-item:not(:nth-child(3n)) {
-  border-right: 1px solid grey;
+.no-scroll {
+  overflow: hidden;
 }
 
 .flag-animation {
@@ -22,3 +22,4 @@
     transform: scale(1);
   }
 }
+

@@ -1,43 +1,70 @@
-import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
-import CountryModal from "./CountryModal";
+import React from 'react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import CountryModal from './CountryModal';
+import { CountryModalProps } from '../ICountryModal';
 
-const mockCountry = {
-  name: {
-    common: "Test Country",
-    nativeName: [
-      { language: "en", common: "Test Country", official: "Republic of Test Country" }
-    ],
-  },
-  population: 1000000,
-  region: "Test Region",
-  capital: ["Test City"],
-  currencies: [
-    { name: "Test Dollar", symbol: "T$" }
-  ],
-  borders: ["Test Neighbor"],
-  flags: { svg: "test-flag.svg", alt: "Test Flag" },
-  languages: [
-    { key: "en", value: "English" }
-  ],
-};
+test("CountryModal does not render when 'country' is null", () => {
+  const mockProps: CountryModalProps = {
+    country: null,
+    onClose: jest.fn(),
+  };
 
-describe("CountryModal Component", () => {
-  test("renders correctly with country data", () => {
-    render(<CountryModal country={mockCountry} onClose={jest.fn()} />);
-    expect(screen.getByText("Test Country")).toBeInTheDocument();
-    expect(screen.getByText("Population: 1000000")).toBeInTheDocument();
-  });
+  render(<CountryModal {...mockProps} />);
 
-  test("calls onClose when close button is clicked", () => {
-    const onCloseMock = jest.fn();
-    render(<CountryModal country={mockCountry} onClose={onCloseMock} />);
-    fireEvent.click(screen.getByText("×"));
-    expect(onCloseMock).toHaveBeenCalledTimes(1);
-  });
+  const modalElement = screen.queryByRole('dialog');
+  expect(modalElement).not.toBeInTheDocument();
+});
 
-  test("does not render modal when country is null", () => {
-    const { container } = render(<CountryModal country={null} onClose={jest.fn()} />);
-    expect(container.firstChild).toBeNull();
-  });
+test("CountryModal renders correctly with provided country details", () => {
+  const mockCountry = {
+    name: { common: "Germany", nativeName: [{ language: "de", common: "Deutschland", official: "Bundesrepublik Deutschland" }] },
+    population: 83000000,
+    region: "Europe",
+    capital: ["Berlin"],
+    currencies: [{ name: "Euro", symbol: "€" }],
+    borders: ["France", "Poland", "Austria"],
+    flags: { svg: "https://restcountries.com/v3.1/data/deu.svg", alt: "Flag of Germany" },
+    languages: [{ key: "de", value: "German" }],
+  };
+
+  const mockOnClose = jest.fn();
+
+  render(<CountryModal country={mockCountry} onClose={mockOnClose} />);
+
+  const modalElement = screen.getByRole('dialog');
+  expect(modalElement).toBeInTheDocument();
+
+  const flagElement = screen.getByAltText("Flag of Germany");
+  expect(flagElement).toBeInTheDocument();
+
+  const nameElement = screen.getByText("Germany");
+  expect(nameElement).toBeInTheDocument();
+
+  const nativeNameElement = screen.getByText("(de): Deutschland (Bundesrepublik Deutschland)");
+  expect(nativeNameElement).toBeInTheDocument();
+
+  const capitalElement = screen.getByText("Berlin");
+  expect(capitalElement).toBeInTheDocument();
+
+  const populationElement = screen.getByText("83000000");
+  expect(populationElement).toBeInTheDocument();
+
+  const regionElement = screen.getByText("Europe");
+  expect(regionElement).toBeInTheDocument();
+
+  const currencyElement = screen.getByText("Euro (€)");
+  expect(currencyElement).toBeInTheDocument();
+
+  const bordersElement = screen.getByText("France, Poland, Austria");
+  expect(bordersElement).toBeInTheDocument();
+
+  const languageElement = screen.getByText("de (German)");
+  expect(languageElement).toBeInTheDocument();
+
+  const closeButton = screen.getByText("×");
+  expect(closeButton).toBeInTheDocument();
+
+  fireEvent.click(closeButton);
+  expect(mockOnClose).toHaveBeenCalled();
 });

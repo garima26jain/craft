@@ -1,5 +1,5 @@
-import CountryListWidget from "./components/CountryWidget";
+import CountryListing from "./components/HomePage/CountryListing";
 
 export default function App() {
-  return <CountryListWidget />;
+  return <CountryListing />;
 }
